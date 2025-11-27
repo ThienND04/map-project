@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+    # 1. Database: PostgreSQL tích hợp sẵn PostGIS
+    db:
+        image: postgis/postgis:15-3.3
+        container_name: map-gis-db
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=gisdb
+        ports:
+            - "5432:5432"
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        restart: unless-stopped
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    # 2. Map Server: GeoServer
+    geoserver:
+        image: docker.osgeo.org/geoserver:2.23.0
+        container_name: my_geoserver
+        ports:
+            - "8080:8080"
+        environment:
+            - GEOSERVER_ADMIN_PASSWORD=geoserver
+            - GEOSERVER_ADMIN_USER=admin
+        depends_on:
+            - db
+        volumes:
+            - geoserver_data:/opt/geoserver_data_dir
+
+volumes:
+    db_data:
+    geoserver_data:
