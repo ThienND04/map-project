@@ -9,18 +9,27 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@deck.gl/react": "^9.2.2",
+    "@types/react-map-gl": "^6.1.7",
+    "deck.gl": "^9.2.2",
+    "lucide-react": "^0.555.0",
+    "mapbox-gl": "^3.17.0",
     "next": "16.0.4",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "swr": "^2.3.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "baseline-browser-mapping": "^2.9.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
+    "react-map-gl": "^7.0.21",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
