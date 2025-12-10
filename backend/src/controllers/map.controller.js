@@ -9,11 +9,12 @@ const getLayerAsGeoJSON = catchAsync(async (req, res) => {
     res.json(geojsonData);
 });
 
+// [GET] /map/tiles/:layerName/:z/:x/:y.pbf
 const getTile = catchAsync(async (req, res) => {
     const { layerName, z, x, y } = req.params;
     const tileData = await mapService.getTile(layerName, z, x, y);
     res.setHeader('Content-Type', 'application/x-protobuf');
-    res.send(tileData);
+    res.status(httpStatus.default.OK).send(tileData);
 });
 
 const getFeatureById = catchAsync(async (req, res) => {
