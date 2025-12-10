@@ -1,0 +1,12 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Di chuyển vào folder frontend trước khi chạy lệnh
+cd frontend
+
+# Chạy lint-staged (nó sẽ tìm package.json tại folder hiện tại là frontend)
+npx lint-staged
+
+cd ../backend
+
+npx lint-staged

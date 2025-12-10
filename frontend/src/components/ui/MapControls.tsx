@@ -1,20 +1,32 @@
 import { Plus, Minus, Locate } from 'lucide-react';
 
-export default function MapControls() {
-  return (
-    <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1">
-      <div className="bg-white rounded-md shadow-md flex flex-col">
-        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-t-md">
-          <Plus size={20} />
-        </button>
-        <hr className="border-gray-200" />
-        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-b-md">
-          <Minus size={20} />
-        </button>
-      </div>
-      <button className="bg-white rounded-md shadow-md p-2 text-gray-600 hover:bg-gray-100">
-        <Locate size={20} />
-      </button>
-    </div>
-  );
+interface MapControlsProps {
+    onZoomIn: () => void;
+    onZoomOut: () => void;
+}
+
+export default function MapControls({ onZoomIn, onZoomOut }: MapControlsProps) {
+    return (
+        <div className="flex flex-col gap-2 bg-white/90 backdrop-blur-sm p-1 rounded-md shadow-lg border border-gray-200">
+            {/* Nút Zoom In (+/Phóng to) */}
+            <button
+                onClick={onZoomIn}
+                className="p-2 hover:bg-gray-100 rounded transition-colors border-b border-gray-100"
+                title="Phóng to"
+                type="button"
+            >
+                <span className="text-xl font-bold text-gray-700">+</span>
+            </button>
+
+            {/* Nút Zoom Out (-/Thu nhỏ) */}
+            <button
+                onClick={onZoomOut}
+                className="p-2 hover:bg-gray-100 rounded transition-colors"
+                title="Thu nhỏ"
+                type="button"
+            >
+                <span className="text-xl font-bold text-gray-700">−</span>
+            </button>
+        </div>
+    );
 }

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
     # 1. Database: PostgreSQL tích hợp sẵn PostGIS
     db:
@@ -28,6 +27,8 @@ services:
         environment:
             - GEOSERVER_ADMIN_PASSWORD=geoserver
             - GEOSERVER_ADMIN_USER=admin
+            - INSTALL_EXTENSIONS=true
+            - STABLE_EXTENSIONS=vectortiles,mbstyle,css,importer,wps,printing,gdal,ogcapi-features,control-flow,monitor
         depends_on:
             - db
         volumes:

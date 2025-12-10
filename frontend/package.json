@@ -6,9 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
+    "@deck.gl/geo-layers": "^9.2.3",
     "@deck.gl/react": "^9.2.2",
     "@types/react-map-gl": "^6.1.7",
     "deck.gl": "^9.2.2",
@@ -29,6 +36,9 @@
     "baseline-browser-mapping": "^2.9.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "react-map-gl": "^7.0.21",
     "tailwindcss": "^4",
     "typescript": "^5"
