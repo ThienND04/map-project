@@ -24,7 +24,7 @@ const getFeatureById = catchAsync(async (req, res) => {
 });
 
 const searchFeatures = catchAsync(async (req, res) => {
-    const { q } = req.query;
+    const {q} = req.query;
     const features = await mapService.searchFeatures(q);
     res.json(features);
 });
