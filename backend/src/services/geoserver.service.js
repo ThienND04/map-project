@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { getAllLayers } = require("../controllers/map.controller");
 
 const GEOSERVER_URL = "http://localhost:8080/geoserver";
 const WORKSPACE = 'map-project';
