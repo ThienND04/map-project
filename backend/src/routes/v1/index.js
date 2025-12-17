@@ -1,22 +1,33 @@
 const express = require('express');
 const testRoute = require('./test');
 const mapRoute = require('./map.route');
+const bearRoute = require('./bear.route');
+const healthRoute = require('./health.route');
+const { path } = require('../../app');
 
 const router = express.Router();
 
 const defaultRoutes = [
-  {
-    path: '/test',
-    route: testRoute,
-  },
-  {
-    path: '/map',
-    route: mapRoute,
-  },
+    {
+        path: '/test',
+        route: testRoute,
+    },
+    {
+        path: '/map',
+        route: mapRoute,
+    },
+    {
+        path: '/bears',
+        route: bearRoute,
+    },
+    {
+        path: '/health',
+        route: healthRoute,
+    }
 ];
 
 defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
+    router.use(route.path, route.route);
 });
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('../utils/db'); // Assuming you have a db connection utility
+const db = require('../config/postgres');
 
 const GEOSERVER_URL = 'http://localhost:8080/geoserver';
 const WORKSPACE = 'map-project';
