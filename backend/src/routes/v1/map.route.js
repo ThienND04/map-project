@@ -71,15 +71,4 @@ router.get('/layers/:layerName/geojson', mapController.getLayerAsGeoJSON);
  */
 router.get('/tiles/:layerName/:z/:x/:y.pbf', mapController.getTile);
 
-// Group 2: Interaction
-router.get('/features/:layerName/:id', mapController.getFeatureById);
-router.get('/search', mapController.searchFeatures);
-
-// Group 3: Spatial Analysis
-router.get('/analysis/nearby', mapController.getNearbyFeatures);
-router.get('/analysis/in-polygon', mapController.getFeaturesInPolygon);
-
-// Group 4: Metadata
-router.get('/config/layers', mapController.getLayersConfig);
-
 module.exports = router;
