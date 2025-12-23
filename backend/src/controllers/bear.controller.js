@@ -8,16 +8,15 @@ const getBearYears = catchAsync(async (req, res) => {
     res.json(years);
 });
 
-// [GET] /bears/search?q={query}
+// [GET] /bears/search?q={query}&year={year}&lang={lang}&page={page}&limit={limit}
 const searchBear = catchAsync(async (req, res) => {
-    console.log("Search Bear Request Query:", req.query);
     const { q, year, lang, page, limit } = req.query;
     if (!q) return res.status(400).json({ message: "Thiếu từ khóa q" });
     const results = await bearService.search(q, year, lang, page, limit);
     res.json(results);
 });
 
-// [GET] /bears/:id
+// [GET] /bears/:id?lang={lang}
 const getBearDetail = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { lang } = req.query;

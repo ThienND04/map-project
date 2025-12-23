@@ -2,8 +2,8 @@ const axios = require('axios');
 const db = require('../config/postgres');
 
 const getYears = async () => {
-    const query = 'SELECT DISTINCT "Year" FROM japan_bears ORDER BY "Year" desc;';
-    return db.query(query).then(res => res.rows.map(row => row.Year));
+    const query = 'SELECT DISTINCT year FROM japan_bears ORDER BY year desc;';
+    return db.query(query).then(res => res.rows.map(row => row.year));
 };
 
 const search = async (
@@ -30,7 +30,8 @@ const search = async (
             ST_X(geom) as lng, 
             ST_Y(geom) as lat,
             ${nameColumn} as name, 
-            ${descColumn} as description
+            ${descColumn} as description,
+            COUNT(*) OVER() as total_count
         FROM japan_bears 
         WHERE (
             ${nameColumn} ILIKE $1 OR 
