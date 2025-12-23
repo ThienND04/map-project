@@ -27,8 +27,8 @@ const search = async (
         SELECT 
             fid, 
             year, 
-            ST_X(geom) as lng, 
-            ST_Y(geom) as lat,
+            ST_X(geom) as longitude, 
+            ST_Y(geom) as latitude,
             ${nameColumn} as name, 
             ${descColumn} as description,
             COUNT(*) OVER() as total_count
@@ -48,7 +48,7 @@ const search = async (
         console.log(paramIndex)
     }
     
-    query += `ORDER BY year desc
+    query += ` ORDER BY year desc
         LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
     params.push(limit, offset);
@@ -71,8 +71,8 @@ const getBearDetail = async (id, lang = "ja") => {
         SELECT 
             fid, 
             year, 
-            ST_X(geom) as lng, 
-            ST_Y(geom) as lat,
+            ST_X(geom) as longitude, 
+            ST_Y(geom) as latitude,
             ${nameColumn} as name,
             ${descColumn} as description
         FROM japan_bears 
