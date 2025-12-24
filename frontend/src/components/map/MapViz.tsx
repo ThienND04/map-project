@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import Map, { MapProvider, Popup } from 'react-map-gl';
+import Map, { MapProvider, NavigationControl, Popup } from 'react-map-gl';
 import DeckGL from '@deck.gl/react';
 import { MVTLayer } from '@deck.gl/geo-layers';
 import { BearSighting } from '@/types/bear';
@@ -12,6 +12,7 @@ import { GeoJsonLayer, ScatterplotLayer } from 'deck.gl';
 import { FlyToInterpolator } from '@deck.gl/core';
 import SearchBar from '@/components/ui/SearchBar';
 import Colors from '@/constants/colors';
+import { ZoomControls } from '../ui/ZoomControls';
 
 interface MapVizProps {
     selectedYear: number;
@@ -27,7 +28,6 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
     const [selectedBear, setSelectedBear] = useState<BearSighting | null>(null);
     const [searchResults, setSearchResults] = useState<BearSighting[]>([]);
-    console.log("Search results state:", searchResults);
 
     const [viewState, setViewState] = useState({
         longitude: 138.2529,
@@ -35,7 +35,7 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
         zoom: 5,
         pitch: 0,
         bearing: 0,
-        transitionDuration: 0, // Mặc định không transition
+        transitionDuration: 0, 
         transitionInterpolator: undefined as any
     });
 
@@ -68,7 +68,6 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
             maxZoom: 23,
 
             renderSubLayers: (props) => {
-                // Chỉ vẽ khi tile có dữ liệu
                 if (!props.data) return null;
 
                 return new GeoJsonLayer(props, {
@@ -95,14 +94,11 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                     getLineColor: [0, 0, 0],
                     getLineWidth: 1,
 
-
-                    // Tương tác
                     pickable: true,
                     autoHighlight: true,
                 });
             },
 
-            // 3. Xử lý Hover (Giữ nguyên logic của bạn)
             pickable: true,
             onClick: (info) => {
                 if (info.object && info.coordinate) {
@@ -128,12 +124,10 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
             },
             onHover: (info) => {
                 if (info.object) {
-                    // Log ra để debug xem dữ liệu có những trường nào
-                    // console.log("Hover data:", info.object); 
 
                     setHoverInfo({
                         object: {
-                            ...info.object.properties, // Lấy id, year... từ properties
+                            ...info.object.properties, 
                             latitude: info.coordinate?.[1] || 0,
                             longitude: info.coordinate?.[0] || 0
                         } as BearSighting,
@@ -150,6 +144,24 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
         })
     ];
 
+    const handleZoomIn = () => {
+        setViewState(v => ({
+            ...v,
+            zoom: Math.min(v.zoom + 1, 20), // Max zoom 20
+            transitionDuration: 300,        // Hiệu ứng mượt trong 300ms
+            transitionInterpolator: new FlyToInterpolator()
+        }));
+    };
+
+    const handleZoomOut = () => {
+        setViewState(v => ({
+            ...v,
+            zoom: Math.max(v.zoom - 1, 0),  // Min zoom 0
+            transitionDuration: 300,
+            transitionInterpolator: new FlyToInterpolator()
+        }));
+    };
+
     return (
         <MapProvider>
             <div className="relative w-full h-screen">
@@ -158,8 +170,13 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                     onSelectLocation={handleSelectLocation}
                     onSearchComplete={(results) => setSearchResults(results)}
                 />
+                <ZoomControls 
+                    onZoomIn={handleZoomIn} 
+                    onZoomOut={handleZoomOut}
+                />
                 <DeckGL
-                    initialViewState={viewState}
+                    viewState={viewState}
+                    onViewStateChange={({ viewState }) => setViewState(viewState as any)}
                     controller={true}
                     layers={layers}
                     style={{ width: '100%', height: '100%' }}
@@ -169,7 +186,12 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
                         mapStyle="mapbox://styles/mapbox/navigation-night-v1"
                         reuseMaps
-
+                        {...viewState}
+                        
+                        onMove={evt => setViewState(prev => ({
+                            ...prev,
+                            ...evt.viewState
+                        }))}
                     >
                         {selectedBear &&
                             typeof selectedBear.latitude === 'number' &&

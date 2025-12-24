@@ -4,13 +4,14 @@ import { BearSighting } from '@/types/bear'; // Giả sử dùng chung type ho�
 import { searchBearData } from '@/services/bearService';
 import {  SearchBarProps } from '@/types/search';
 
-export default function SearchBar({ year, lang = 'en', onSelectLocation, onSearchComplete }: SearchBarProps) {
+export default function SearchBar({ year, onSelectLocation, onSearchComplete }: SearchBarProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<BearSighting[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleSearch = async (e: React.FormEvent) => {
+        const lang = localStorage.getItem('lang') || 'vi';
         console.log('Searching for:', query, 'Year:', year, 'Lang:', lang);
         e.preventDefault();
         if (!query.trim()) return;
@@ -42,9 +43,7 @@ export default function SearchBar({ year, lang = 'en', onSelectLocation, onSearc
                 {isExpanded ? <ChevronLeft className="w-5 h-5 text-gray-600"/> : <ChevronRight className="w-5 h-5 text-gray-600"/>}
             </button>
 
-            {/* Nội dung bên trong (Ẩn khi đóng) */}
             <div className={`flex flex-col h-full ${!isExpanded && 'hidden'}`}>
-                {/* --- HEADER --- */}
                 <div className="p-4 shadow-sm z-20 bg-white border-b border-gray-100">
                     <form onSubmit={handleSearch} className="relative flex items-center">
                         <input
@@ -68,7 +67,6 @@ export default function SearchBar({ year, lang = 'en', onSelectLocation, onSearc
                     </form>
                 </div>
 
-                {/* --- BODY: Result List --- */}
                 <div className="flex-1 overflow-y-auto bg-gray-50 scrollbar-thin scrollbar-thumb-gray-200">
                     {loading ? (
                         <div className="flex justify-center items-center py-10">
