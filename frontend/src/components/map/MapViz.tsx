@@ -12,9 +12,10 @@ import { ZoomControls } from '@/components/ui/ZoomControls';
 import { getBearH3Layer } from '@/components/map/layers/BearH3Layer';
 import { getBearPointsLayer } from '@/components/map/layers/BearPointsLayer';
 import { ViewModeControl } from '@/components/ui/ViewModeControl';
-import { getH3Resolution } from '@/lib/utils';
+import { getH3Resolution, getBearName, getBearDescription } from '@/lib/utils';
 import Legend from './Legend';
 import { useLanguage } from '@/context/LanguageContext';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface MapVizProps {
     selectedYear: number;
@@ -26,14 +27,28 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
     const [selectedBear, setSelectedBear] = useState<BearSighting | null>(null);
     const [searchResults, setSearchResults] = useState<BearSighting[]>([]);
     const [isMounted, setIsMounted] = useState(false);
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
 
     const mapRef = useRef<MapRef>(null);
+    
+    const [viewState, setViewState] = useState({
+        longitude: 138.2529,
+        latitude: 36.2048,
+        zoom: 5,
+        pitch: 0,
+        bearing: 0,
+        transitionDuration: 0,
+        transitionInterpolator: undefined as any
+    });
+
     const [currentBounds, setCurrentBounds] = useState<{
         minLat: number, maxLat: number, minLng: number, maxLng: number
     } | null>(null);
 
-    // goi khi map dung di chuyen
+    // Debounce bounds và zoom để giảm số lượng API calls
+    const debouncedBounds = useDebounce(currentBounds, 300);
+    const debouncedZoom = useDebounce(viewState.zoom, 300);
+
     const updateBounds = useCallback((mapInstance?: any) => {
         const map = mapInstance || mapRef.current?.getMap();
         console.log('Map instance found:', !!map);
@@ -48,16 +63,6 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
             });
         }
     }, []);
-
-    const [viewState, setViewState] = useState({
-        longitude: 138.2529,
-        latitude: 36.2048,
-        zoom: 5,
-        pitch: 0,
-        bearing: 0,
-        transitionDuration: 0,
-        transitionInterpolator: undefined as any
-    });
 
     const handleSelectLocation = useCallback((location: any) => {
         console.log("Selected location from search:", location);
@@ -125,18 +130,16 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                 })
             );
         } else if (viewMode === 'H3_DENSITY') {
-            const resolution = getH3Resolution(viewState.zoom);
+            const resolution = getH3Resolution(debouncedZoom);
             layerList.push(
                 getBearH3Layer({
                     selectedYear,
                     resolution: resolution, 
-                    bounds: currentBounds, 
+                    bounds: debouncedBounds, 
                     onHover: (info) => {
                         if (info.object) {
-                            // console.log('H3 Hover Info:', info.object);
                             const [lng, lat] = info.coordinate || [0, 0];
                             const bearData = { ...info.object, longitude: lng, latitude: lat };
-                            // console.log('H3 Bear Data:', bearData);
                             setHoverInfo({
                                 object: bearData,
                                 x: info.x,
@@ -152,7 +155,7 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
         }
 
         return layerList;
-    }, [viewMode, selectedYear, selectedBear, searchResults, viewState.zoom, currentBounds]);
+    }, [viewMode, selectedYear, selectedBear, searchResults, debouncedZoom, debouncedBounds]);
 
     const handleZoomIn = () => {
         setViewState(v => ({
@@ -232,10 +235,10 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                                     >
                                         <div style={{ color: 'black', padding: '5px' }}>
                                             <h3 className="font-bold text-sm">
-                                                {selectedBear.name || t.map.unnamedBear}
+                                                {getBearName(selectedBear, lang) || t.map.unnamedBear}
                                             </h3>
-                                            {selectedBear.description && (
-                                                <p className="text-xs mt-1">{selectedBear.description}</p>
+                                            {getBearDescription(selectedBear, lang) && (
+                                                <p className="text-xs mt-1">{getBearDescription(selectedBear, lang)}</p>
                                             )}
                                             <p className="text-xs text-gray-500 mt-1">
                                                 {t.map.year}: {selectedBear.year || selectedYear}
