@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface YearSelectorProps {
     minYear: number;
@@ -13,12 +14,14 @@ const YearSelector: React.FC<YearSelectorProps> = ({
     selectedYear,
     onChange,
 }) => {
+    const { t } = useLanguage();
+
     return (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-md px-6 py-4 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-2 items-center z-40">
 
             {/* Label hiển thị năm */}
             <div className="flex items-baseline gap-2">
-                <span className="text-slate-400 text-sm font-medium">Dữ liệu năm</span>
+                <span className="text-slate-400 text-sm font-medium">{t.yearSelector.dataYear}</span>
                 <span className="text-3xl font-bold text-emerald-400 tabular-nums">
                     {selectedYear}
                 </span>
@@ -38,7 +41,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({
             </div>
 
             <p className="text-[10px] text-slate-500 mt-1">
-                Kéo để xem sự thay đổi phân bổ gấu theo thời gian
+                {t.yearSelector.dragToSee}
             </p>
         </div>
     );

@@ -14,6 +14,7 @@ import { getBearPointsLayer } from '@/components/map/layers/BearPointsLayer';
 import { ViewModeControl } from '@/components/ui/ViewModeControl';
 import { getH3Resolution } from '@/lib/utils';
 import Legend from './Legend';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface MapVizProps {
     selectedYear: number;
@@ -24,6 +25,8 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
     const [selectedBear, setSelectedBear] = useState<BearSighting | null>(null);
     const [searchResults, setSearchResults] = useState<BearSighting[]>([]);
+    const [isMounted, setIsMounted] = useState(false);
+    const { t } = useLanguage();
 
     const mapRef = useRef<MapRef>(null);
     const [currentBounds, setCurrentBounds] = useState<{
@@ -77,6 +80,10 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
             updateBounds();
         }
     }, [mapRef.current]);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const layers = useMemo(() => {
         const layerList = [];
@@ -179,65 +186,67 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                     onZoomOut={handleZoomOut}
                 />
                 { viewMode === 'H3_DENSITY' && <Legend maxCount={50} />}
-                <DeckGL
-                    viewState={viewState}
-                    onViewStateChange={({ viewState }) => setViewState(viewState as any)}
-                    controller={true}
-                    layers={layers}
-                    style={{ width: '100%', height: '100%' }}
-                    getCursor={({ isHovering }) => isHovering ? 'pointer' : 'default'}
-                    onInteractionStateChange={(interactionState) => {
-                        if (!interactionState.isDragging && !interactionState.isZooming && !interactionState.isPanning) {
-                            updateBounds();
-                        }
-                    }}
-                >
-                    <Map
-                        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-                        mapStyle="mapbox://styles/mapbox/navigation-night-v1"
-                        reuseMaps
-                        {...viewState}
-
-                        onMove={evt => setViewState(prev => ({
-                            ...prev,
-                            ...evt.viewState
-                        }))}
-                        onMoveEnd={(evt) => {
-                            updateBounds(evt.target); 
-                        }}
-                        onLoad={(evt) => {
-                            updateBounds(evt.target); 
+                {isMounted && (
+                    <DeckGL
+                        viewState={viewState}
+                        onViewStateChange={({ viewState }) => setViewState(viewState as any)}
+                        controller={true}
+                        layers={layers}
+                        style={{ width: '100%', height: '100%' }}
+                        getCursor={({ isHovering }) => isHovering ? 'pointer' : 'default'}
+                        onInteractionStateChange={(interactionState) => {
+                            if (!interactionState.isDragging && !interactionState.isZooming && !interactionState.isPanning) {
+                                updateBounds();
+                            }
                         }}
                     >
-                        {viewMode === 'POINTS' && selectedBear &&
-                            typeof selectedBear.latitude === 'number' &&
-                            typeof selectedBear.longitude === 'number' &&
-                            !isNaN(selectedBear.latitude) &&
-                            !isNaN(selectedBear.longitude) && (
-                                <Popup
-                                    longitude={selectedBear.longitude}
-                                    latitude={selectedBear.latitude}
-                                    anchor="bottom"
-                                    onClose={() => setSelectedBear(null)}
-                                    closeOnClick={false}
-                                    offset={10}
-                                >
-                                    <div style={{ color: 'black', padding: '5px' }}>
-                                        <h3 className="font-bold text-sm">
-                                            {selectedBear.name || "Gấu chưa có tên"}
-                                        </h3>
-                                        {selectedBear.description && (
-                                            <p className="text-xs mt-1">{selectedBear.description}</p>
-                                        )}
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Năm: {selectedBear.year || selectedYear}
-                                        </p>
-                                    </div>
-                                </Popup>
-                            )}
-                    </Map>
-                    {hoverInfo && <BearTooltip info={hoverInfo} />}
-                </DeckGL>
+                        <Map
+                            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+                            mapStyle="mapbox://styles/mapbox/navigation-night-v1"
+                            reuseMaps
+                            {...viewState}
+
+                            onMove={evt => setViewState(prev => ({
+                                ...prev,
+                                ...evt.viewState
+                            }))}
+                            onMoveEnd={(evt) => {
+                                updateBounds(evt.target); 
+                            }}
+                            onLoad={(evt) => {
+                                updateBounds(evt.target); 
+                            }}
+                        >
+                            {viewMode === 'POINTS' && selectedBear &&
+                                typeof selectedBear.latitude === 'number' &&
+                                typeof selectedBear.longitude === 'number' &&
+                                !isNaN(selectedBear.latitude) &&
+                                !isNaN(selectedBear.longitude) && (
+                                    <Popup
+                                        longitude={selectedBear.longitude}
+                                        latitude={selectedBear.latitude}
+                                        anchor="bottom"
+                                        onClose={() => setSelectedBear(null)}
+                                        closeOnClick={false}
+                                        offset={10}
+                                    >
+                                        <div style={{ color: 'black', padding: '5px' }}>
+                                            <h3 className="font-bold text-sm">
+                                                {selectedBear.name || t.map.unnamedBear}
+                                            </h3>
+                                            {selectedBear.description && (
+                                                <p className="text-xs mt-1">{selectedBear.description}</p>
+                                            )}
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {t.map.year}: {selectedBear.year || selectedYear}
+                                            </p>
+                                        </div>
+                                    </Popup>
+                                )}
+                        </Map>
+                        {hoverInfo && <BearTooltip info={hoverInfo} />}
+                    </DeckGL>
+                )}
             </div>
         </MapProvider>
     );

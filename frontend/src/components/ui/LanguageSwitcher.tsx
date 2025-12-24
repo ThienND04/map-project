@@ -2,22 +2,23 @@
 
 import { useState } from 'react';
 import { Globe } from 'lucide-react'; 
+import { Language } from '@/lib/translations';
 
 interface LanguageSwitcherProps {
-    currentLang: string;
-    onChange: (lang: string) => void;
+    currentLang: Language;
+    onChange: (lang: Language) => void;
 }
 
 const LANGUAGES = [
-    { code: 'en', label: 'English', flag: '🇬🇧' },
-    { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
-    { code: 'ja', label: '日本語', flag: '🇯🇵' },
+    { code: 'vi' as Language, label: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'en' as Language, label: 'English', flag: '🇬🇧' },
+    { code: 'ja' as Language, label: '日本語', flag: '🇯🇵' },
 ];
 
 export default function LanguageSwitcher({ currentLang, onChange }: LanguageSwitcherProps) {
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleSelect = (code: string) => {
+    const handleSelect = (code: Language) => {
         onChange(code);
         setIsOpen(false);
     };
