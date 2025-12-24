@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { Search, MapPin, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BearSighting } from '@/types/bear'; 
 import { searchBearData } from '@/services/bearService';
-import {  SearchBarProps } from '@/types/search';
+import { SearchBarProps } from '@/types/search';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SearchBar({ year, onSelectLocation, onSearchComplete }: SearchBarProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<BearSighting[]>([]);
     const [loading, setLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const { lang, t } = useLanguage();
 
     const handleSearch = async (e: React.FormEvent) => {
-        const lang = localStorage.getItem('lang') || 'vi';
         console.log('Searching for:', query, 'Year:', year, 'Lang:', lang);
         e.preventDefault();
         if (!query.trim()) return;
@@ -38,7 +39,7 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
             <button 
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="absolute -right-8 top-4 bg-white p-1.5 rounded-r-md shadow-md hover:bg-gray-100 border border-l-0 border-gray-200 z-50 flex items-center justify-center"
-                title={isExpanded ? "Thu gọn" : "Mở rộng"}
+                title={isExpanded ? t.searchBar.collapse : t.searchBar.expand}
             >
                 {isExpanded ? <ChevronLeft className="w-5 h-5 text-gray-600"/> : <ChevronRight className="w-5 h-5 text-gray-600"/>}
             </button>
@@ -49,7 +50,7 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
                         <input
                             type="text"
                             className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
-                            placeholder="Tìm kiếm ..."
+                            placeholder={t.searchBar.searchPlaceholder}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
@@ -86,9 +87,9 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
                                                 <MapPin className="w-4 h-4 text-blue-600" />
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-gray-800 text-sm line-clamp-1">{item.name || "Vị trí không tên"}</h4>
+                                                <h4 className="font-semibold text-gray-800 text-sm line-clamp-1">{item.name || t.searchBar.unnamedLocation}</h4>
                                                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                                    {item.description || `Dữ liệu gấu năm ${year}`}
+                                                    {item.description || `${t.searchBar.bearDataYear} ${year}`}
                                                 </p>
                                             </div>
                                         </div>
@@ -97,7 +98,7 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
                             ) : (
                                 query && !loading && (
                                     <div className="text-center text-gray-500 mt-10 text-sm">
-                                        Không tìm thấy kết quả phù hợp.
+                                        {t.searchBar.noResults}
                                     </div>
                                 )
                             )}

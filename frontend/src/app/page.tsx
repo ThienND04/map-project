@@ -1,34 +1,22 @@
 'use client';
 
 import MapViz from '@/components/map/MapViz';
-import { BearSighting } from '@/types/bear';
 import YearSelector from '@/components/ui/YearSelector';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState } from 'react';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import { useLanguage } from '@/context/LanguageContext';
 
 
 export default function Home() {
     const [selectedYear, setSelectedYear] = useState<number>(2024);
-    const [lang, setLang] = useState('vi');
-
-    useEffect(() => {
-        const savedLang = localStorage.getItem('lang');
-        if (savedLang) {
-            setLang(savedLang);
-        }
-    }, []);
-
-    const handleChangeLanguage = (newLang: string) => {
-        setLang(newLang);
-        localStorage.setItem('lang', newLang);
-    };
+    const { lang, setLang } = useLanguage();
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-between">
             <div className="w-full h-screen relative">
                 <LanguageSwitcher 
                     currentLang={lang} 
-                    onChange={handleChangeLanguage} 
+                    onChange={setLang} 
                 />
                 <MapViz selectedYear={selectedYear} />
 

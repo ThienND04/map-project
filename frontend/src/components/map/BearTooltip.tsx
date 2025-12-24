@@ -1,5 +1,6 @@
 import React from 'react';
 import { BearSighting } from '@/types/bear';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TooltipInfo {
     object: BearSighting | BearH3Data;
@@ -19,7 +20,7 @@ interface BearTooltipProps {
 
 const BearTooltip: React.FC<BearTooltipProps> = ({ info }) => {
     const { object, x, y, type } = info;
-    const lang = localStorage.getItem('lang') || 'vi';
+    const { lang, t } = useLanguage();
 
     if (type === 'H3') {
         const h3Data = object as BearH3Data; 
@@ -30,10 +31,10 @@ const BearTooltip: React.FC<BearTooltipProps> = ({ info }) => {
             >
                 <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Khu vực H3
+                        H3
                     </span>
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-200">Số lượng phát hiện:</span>
+                        <span className="text-slate-200">{t.tooltip.bearCount}:</span>
                         <span className="text-lg font-bold text-yellow-400">
                             {h3Data.count}
                         </span>
@@ -47,7 +48,7 @@ const BearTooltip: React.FC<BearTooltipProps> = ({ info }) => {
         let displayName = bearData.name;
         let displayDesc = bearData.description;
 
-        if (lang !== 'jp') {
+        if (lang !== 'ja') {
             const localName = (bearData as any)[`name_${lang}`];
             const localDesc = (bearData as any)[`description_${lang}`];
 
@@ -63,12 +64,12 @@ const BearTooltip: React.FC<BearTooltipProps> = ({ info }) => {
                 }}
             >
                 <div className="space-y-1 text-slate-300">
-                    <p><span className="font-semibold text-slate-400">Năm:</span> {bearData.year}</p>
+                    <p><span className="font-semibold text-slate-400">{t.map.year}:</span> {bearData.year}</p>
                     {displayName && (
-                        <p><span className="font-semibold text-slate-400">Địa điểm:</span> {displayName}</p>
+                        <p><span className="font-semibold text-slate-400">{t.tooltip.details}:</span> {displayName}</p>
                     )}
                     {displayDesc && (
-                        <p><span className="font-semibold text-slate-400">Mo ta?:</span> {displayDesc}</p>
+                        <p><span className="font-semibold text-slate-400">{t.tooltip.details}:</span> {displayDesc}</p>
                     )}
                     <p className="text-xs text-slate-500 mt-2">
                         Lat: {bearData.latitude.toFixed(4)}, Lng: {bearData.longitude.toFixed(4)}
