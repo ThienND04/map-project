@@ -1,7 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
-// Khởi tạo Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
@@ -32,7 +31,7 @@ const translateBearData = async (name, description) => {
         const response = await result.response;
         const text = response.text();
 
-        // Clean markdown json if any (```json ... ```)
+        // Clean markdown 
         const cleanText = text.replace(/```json|```/g, '').trim();
 
         return JSON.parse(cleanText);

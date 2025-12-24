@@ -12,16 +12,14 @@ const pool = new Pool({
 const query = (text, params) => pool.query(text, params);
 
 
-// // Lắng nghe sự kiện khi có client mới kết nối thành công
-// pool.on('connect', () => {
-//     console.log('Database connected');
-// });
+pool.on('connect', () => {
+    console.log('Database connected');
+});
 
-// // Lắng nghe lỗi bất ngờ (ví dụ rớt mạng)
-// pool.on('error', (err) => {
-//     console.error('Unexpected error on idle client', err);
-//     process.exit(-1);
-// });
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+});
 
 module.exports = {
     query,

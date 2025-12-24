@@ -16,6 +16,14 @@ const searchBear = catchAsync(async (req, res) => {
     res.json(results);
 });
 
+// [GET] /bears/h3?year={year}&minLat={minLat}&maxLat={maxLat}&minLng={maxLng}&resolution={resolution}
+const countBearInRange = catchAsync(async (req, res) => {
+    console.log("countBearInRange called with query:", req.query);
+    const { year, minLat, maxLat, minLng, maxLng, resolution } = req.query;
+    const results = await bearService.countInRange(year, minLat, maxLat, minLng, maxLng, resolution);
+    res.json(results);
+});
+
 // [GET] /bears/:id?lang={lang}
 const getBearDetail = catchAsync(async (req, res) => {
     const { id } = req.params;
@@ -26,6 +34,7 @@ const getBearDetail = catchAsync(async (req, res) => {
 
 module.exports = {
     getBearYears,
+    countBearInRange,
     searchBear,
     getBearDetail
 }

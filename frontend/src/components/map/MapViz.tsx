@@ -1,33 +1,50 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
-import Map, { MapProvider, NavigationControl, Popup } from 'react-map-gl';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Map, { MapProvider, MapRef, NavigationControl, Popup } from 'react-map-gl';
 import DeckGL from '@deck.gl/react';
-import { MVTLayer } from '@deck.gl/geo-layers';
-import { BearSighting } from '@/types/bear';
+import { BearSighting, HoverInfo, MapViewMode } from '@/types/bear';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import BearTooltip from '@/components/map/BearTooltip';
-import { info } from 'console';
-import { GeoJsonLayer, ScatterplotLayer } from 'deck.gl';
 import { FlyToInterpolator } from '@deck.gl/core';
 import SearchBar from '@/components/ui/SearchBar';
-import Colors from '@/constants/colors';
-import { ZoomControls } from '../ui/ZoomControls';
+import { ZoomControls } from '@/components/ui/ZoomControls';
+import { getBearH3Layer } from '@/components/map/layers/BearH3Layer';
+import { getBearPointsLayer } from '@/components/map/layers/BearPointsLayer';
+import { ViewModeControl } from '@/components/ui/ViewModeControl';
+import { getH3Resolution } from '@/lib/utils';
+import Legend from './Legend';
 
 interface MapVizProps {
     selectedYear: number;
 }
 
-interface HoverInfo {
-    object: BearSighting;
-    x: number;
-    y: number;
-}
-
 const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
+    const [viewMode, setViewMode] = useState<MapViewMode>('POINTS');
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
     const [selectedBear, setSelectedBear] = useState<BearSighting | null>(null);
     const [searchResults, setSearchResults] = useState<BearSighting[]>([]);
+
+    const mapRef = useRef<MapRef>(null);
+    const [currentBounds, setCurrentBounds] = useState<{
+        minLat: number, maxLat: number, minLng: number, maxLng: number
+    } | null>(null);
+
+    // goi khi map dung di chuyen
+    const updateBounds = useCallback((mapInstance?: any) => {
+        const map = mapInstance || mapRef.current?.getMap();
+        console.log('Map instance found:', !!map);
+        if (map) {
+            const bounds = map.getBounds();
+
+            setCurrentBounds({
+                minLng: bounds.getWest(),
+                minLat: bounds.getSouth(),
+                maxLng: bounds.getEast(),
+                maxLat: bounds.getNorth(),
+            });
+        }
+    }, []);
 
     const [viewState, setViewState] = useState({
         longitude: 138.2529,
@@ -35,7 +52,7 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
         zoom: 5,
         pitch: 0,
         bearing: 0,
-        transitionDuration: 0, 
+        transitionDuration: 0,
         transitionInterpolator: undefined as any
     });
 
@@ -55,100 +72,86 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
         }
     }, []);
 
-    const DATA_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/map/tiles/japan_bears_${selectedYear}/{z}/{x}/{y}.pbf`;
+    useEffect(() => {
+        if (!currentBounds && mapRef.current) {
+            updateBounds();
+        }
+    }, [mapRef.current]);
 
-    const layers = [
-        new MVTLayer<BearSighting>({
-            id: `bear-mvt-layer-${selectedYear}`,
-            data: DATA_URL,
+    const layers = useMemo(() => {
+        const layerList = [];
 
-            binary: true,
+        if (viewMode === 'POINTS') {
+            layerList.push(
+                getBearPointsLayer({
+                    selectedYear,
+                    selectedBear,
+                    searchResults,
+                    onClick: (info) => {
+                        if (info.object && info.coordinate) {
+                            const [lng, lat] = info.coordinate;
+                            const bearData = { ...info.object.properties, longitude: lng, latitude: lat };
 
-            minZoom: 0,
-            maxZoom: 23,
-
-            renderSubLayers: (props) => {
-                if (!props.data) return null;
-
-                return new GeoJsonLayer(props, {
-                    ...props,
-
-                    id: `${props.id}-geojson`,
-                    data: props.data,
-
-                    pointRadiusUnits: 'pixels', 
-                    getPointRadius: 4,       
-
-                    getFillColor: d => {
-                        if (selectedBear && d.properties.fid === selectedBear.fid) {
-                            return new Uint8ClampedArray(Colors.COLOR_SELECTED);
+                            if (selectedBear && bearData.fid === selectedBear.fid) {
+                                setSelectedBear(null);
+                            } else {
+                                setSelectedBear(bearData);
+                            }
+                        } else {
+                            setSelectedBear(null);
                         }
-
-                        const isFound = searchResults.some(result => parseInt(result.fid) === d.properties.fid);
-                        if (isFound) {
-                            return new Uint8ClampedArray(Colors.COLOR_FOUND);
-                        }
-
-                        return new Uint8ClampedArray(Colors.COLOR_DEFAULT);
                     },
-                    getLineColor: [0, 0, 0],
-                    getLineWidth: 1,
-
-                    pickable: true,
-                    autoHighlight: true,
-                });
-            },
-
-            pickable: true,
-            onClick: (info) => {
-                if (info.object && info.coordinate) {
-
-                    const [lng, lat] = info.coordinate;
-
-                    const bearData: BearSighting = {
-                        ...info.object.properties,
-
-                        longitude: lng,
-                        latitude: lat,
-                    };
-
-                    console.log("Dữ liệu gấu đã xử lý:", bearData);
-                    if (selectedBear && bearData.fid === selectedBear.fid) {
-                        setSelectedBear(null);
-                        return;
+                    onHover: (info) => {
+                        if (info.object) {
+                            const [lng, lat] = info.coordinate || [0, 0];
+                            const bearData = { ...info.object.properties, longitude: lng, latitude: lat };
+                            setHoverInfo({
+                                object: bearData,
+                                x: info.x,
+                                y: info.y,
+                                type: 'POINTS'
+                            });
+                        } else {
+                            setHoverInfo(null);
+                        }
                     }
-                    setSelectedBear(bearData);
-                } else {
-                    setSelectedBear(null);
-                }
-            },
-            onHover: (info) => {
-                if (info.object) {
+                })
+            );
+        } else if (viewMode === 'H3_DENSITY') {
+            const resolution = getH3Resolution(viewState.zoom);
+            layerList.push(
+                getBearH3Layer({
+                    selectedYear,
+                    resolution: resolution, 
+                    bounds: currentBounds, 
+                    onHover: (info) => {
+                        if (info.object) {
+                            // console.log('H3 Hover Info:', info.object);
+                            const [lng, lat] = info.coordinate || [0, 0];
+                            const bearData = { ...info.object, longitude: lng, latitude: lat };
+                            // console.log('H3 Bear Data:', bearData);
+                            setHoverInfo({
+                                object: bearData,
+                                x: info.x,
+                                y: info.y,
+                                type: 'H3' 
+                            });
+                        } else {
+                            setHoverInfo(null);
+                        }
+                    }
+                })
+            );
+        }
 
-                    setHoverInfo({
-                        object: {
-                            ...info.object.properties, 
-                            latitude: info.coordinate?.[1] || 0,
-                            longitude: info.coordinate?.[0] || 0
-                        } as BearSighting,
-                        x: info.x,
-                        y: info.y
-                    });
-                } else {
-                    setHoverInfo(null);
-                }
-            },
-            updateTriggers: {
-                getFillColor: [selectedBear, searchResults]
-            }
-        })
-    ];
+        return layerList;
+    }, [viewMode, selectedYear, selectedBear, searchResults, viewState.zoom, currentBounds]);
 
     const handleZoomIn = () => {
         setViewState(v => ({
             ...v,
             zoom: Math.min(v.zoom + 1, 20), // Max zoom 20
-            transitionDuration: 300,        // Hiệu ứng mượt trong 300ms
+            transitionDuration: 300,        
             transitionInterpolator: new FlyToInterpolator()
         }));
     };
@@ -156,7 +159,7 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
     const handleZoomOut = () => {
         setViewState(v => ({
             ...v,
-            zoom: Math.max(v.zoom - 1, 0),  // Min zoom 0
+            zoom: Math.max(v.zoom - 1, 0), 
             transitionDuration: 300,
             transitionInterpolator: new FlyToInterpolator()
         }));
@@ -170,10 +173,12 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                     onSelectLocation={handleSelectLocation}
                     onSearchComplete={(results) => setSearchResults(results)}
                 />
-                <ZoomControls 
-                    onZoomIn={handleZoomIn} 
+                <ViewModeControl mode={viewMode} onChange={setViewMode} />
+                <ZoomControls
+                    onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
                 />
+                { viewMode === 'H3_DENSITY' && <Legend maxCount={50} />}
                 <DeckGL
                     viewState={viewState}
                     onViewStateChange={({ viewState }) => setViewState(viewState as any)}
@@ -181,19 +186,30 @@ const MapViz: React.FC<MapVizProps> = ({ selectedYear }) => {
                     layers={layers}
                     style={{ width: '100%', height: '100%' }}
                     getCursor={({ isHovering }) => isHovering ? 'pointer' : 'default'}
+                    onInteractionStateChange={(interactionState) => {
+                        if (!interactionState.isDragging && !interactionState.isZooming && !interactionState.isPanning) {
+                            updateBounds();
+                        }
+                    }}
                 >
                     <Map
                         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
                         mapStyle="mapbox://styles/mapbox/navigation-night-v1"
                         reuseMaps
                         {...viewState}
-                        
+
                         onMove={evt => setViewState(prev => ({
                             ...prev,
                             ...evt.viewState
                         }))}
+                        onMoveEnd={(evt) => {
+                            updateBounds(evt.target); 
+                        }}
+                        onLoad={(evt) => {
+                            updateBounds(evt.target); 
+                        }}
                     >
-                        {selectedBear &&
+                        {viewMode === 'POINTS' && selectedBear &&
                             typeof selectedBear.latitude === 'number' &&
                             typeof selectedBear.longitude === 'number' &&
                             !isNaN(selectedBear.latitude) &&

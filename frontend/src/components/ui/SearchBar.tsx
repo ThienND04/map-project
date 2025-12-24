@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, MapPin, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { BearSighting } from '@/types/bear'; // Giả sử dùng chung type hoặc tạo type mới cho SearchResult
+import { BearSighting } from '@/types/bear'; 
 import { searchBearData } from '@/services/bearService';
 import {  SearchBarProps } from '@/types/search';
 

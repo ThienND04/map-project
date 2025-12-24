@@ -24,7 +24,6 @@ const YearSelector: React.FC<YearSelectorProps> = ({
                 </span>
             </div>
 
-            {/* Thanh trượt (Slider) */}
             <div className="w-full flex items-center gap-4">
                 <span className="text-xs text-slate-500">{minYear}</span>
                 <input
