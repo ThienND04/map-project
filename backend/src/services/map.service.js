@@ -17,7 +17,6 @@ const getTile = async (layerName, z, x, y) => {
             responseType: 'arraybuffer',
             decompress: false,
             headers: {
-                // Đừng nén
                 'Accept-Encoding': 'identity', 
                 'User-Agent': 'Node.js Proxy'
             }

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const db = require('../config/postgres');
+const h3 = require('h3-js');
 
 const getYears = async () => {
     const query = 'SELECT DISTINCT year FROM japan_bears ORDER BY year desc;';
@@ -7,10 +8,10 @@ const getYears = async () => {
 };
 
 const search = async (
-    keyword, 
-    year, 
-    lang = 'ja', 
-    page = 1, 
+    keyword,
+    year,
+    lang = 'ja',
+    page = 1,
     limit = 10
 ) => {
     let nameColumn = "name";
@@ -40,14 +41,14 @@ const search = async (
     `;
 
     const params = [`%${keyword}%`];
-    let paramIndex = 2; // Start with 2 because $1 is used for keyword
+    let paramIndex = 2; 
 
     if (year) {
-        query += ` AND year = $${paramIndex ++}`;
+        query += ` AND year = $${paramIndex++}`;
         params.push(year);
         console.log(paramIndex)
     }
-    
+
     query += ` ORDER BY year desc
         LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
@@ -58,6 +59,45 @@ const search = async (
     const result = await db.query(query, params);
     console.log("Search Query Result:", result.rows);
     return result.rows;
+};
+
+const countInRange = async (
+    year, minLat, maxLat, minLng, maxLng, resolution
+) => {
+
+    let query = `
+        SELECT ST_X(geom) as lng, ST_Y(geom) as lat 
+        FROM japan_bears 
+        WHERE year = $1
+        AND geom && ST_MakeEnvelope($2, $3, $4, $5, 4326)
+    `;
+    const params = [
+        year,
+        parseFloat(minLng),
+        parseFloat(minLat),
+        parseFloat(maxLng),
+        parseFloat(maxLat)
+    ];
+
+    const result = await db.query(query, params);
+    console.log("Search Query Result:", result.rows);
+
+    const rawPoints = result.rows;
+
+    const hexMap = {};
+    const resLevel = parseInt(resolution); 
+
+    rawPoints.forEach((point) => {
+        const hexId = h3.latLngToCell(point.lat, point.lng, resLevel);
+        hexMap[hexId] = (hexMap[hexId] || 0) + 1;
+    });
+
+    const aggregatedData = Object.entries(hexMap).map(([hex, count]) => ({
+        hex,   
+        count 
+    }));
+
+    return aggregatedData;
 };
 
 const getBearDetail = async (id, lang = "ja") => {
@@ -95,11 +135,11 @@ const createBear = async (data) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
     `;
-    
+
     const values = [
-        data.name, 
-        data.description, 
-        name_en, desc_en, name_vi, desc_vi, 
+        data.name,
+        data.description,
+        name_en, desc_en, name_vi, desc_vi,
         data.year
     ];
 
@@ -111,6 +151,7 @@ const createBear = async (data) => {
 module.exports = {
     getBearYears: getYears,
     search,
+    countInRange,
     getBearDetail,
     createBear
 };

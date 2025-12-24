@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Globe } from 'lucide-react'; // Icon quả địa cầu
+import { Globe } from 'lucide-react'; 
 
 interface LanguageSwitcherProps {
     currentLang: string;

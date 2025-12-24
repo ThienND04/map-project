@@ -14,3 +14,12 @@ export interface MapViewState {
     pitch: number;
     bearing: number;
 }
+
+export interface HoverInfo {
+    object: BearSighting;
+    x: number;
+    y: number;
+    type: string;
+}
+
+export type MapViewMode = 'POINTS' | 'H3_DENSITY';
