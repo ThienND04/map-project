@@ -15,6 +15,9 @@ export const translations = {
             noResults: 'Không tìm thấy kết quả phù hợp.',
             unnamedLocation: 'Vị trí không tên',
             bearDataYear: 'Dữ liệu gấu năm',
+            prev: 'Trước',
+            next: 'Sau',
+            page: 'Trang',
         },
         // Legend
         legend: {
@@ -59,6 +62,9 @@ export const translations = {
             noResults: 'No matching results found.',
             unnamedLocation: 'Unnamed location',
             bearDataYear: 'Bear data year',
+            prev: 'Prev',
+            next: 'Next',
+            page: 'Page',
         },
         // Legend
         legend: {
@@ -103,6 +109,9 @@ export const translations = {
             noResults: '一致する結果が見つかりません。',
             unnamedLocation: '名前のない場所',
             bearDataYear: 'クマデータ年',
+            prev: '前へ',
+            next: '次へ',
+            page: 'ページ',
         },
         // Legend
         legend: {

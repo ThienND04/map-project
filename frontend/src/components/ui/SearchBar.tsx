@@ -5,31 +5,62 @@ import { searchBearData } from '@/services/bearService';
 import { SearchBarProps } from '@/types/search';
 import { useLanguage } from '@/context/LanguageContext';
 
+const ITEMS_PER_PAGE = 10;
+
 export default function SearchBar({ year, onSelectLocation, onSearchComplete }: SearchBarProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<BearSighting[]>([]);
     const [loading, setLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const { lang, t } = useLanguage();
+
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+    const fetchResults = async (searchQuery: string, page: number) => {
+        setLoading(true);
+        try {
+            const data = await searchBearData(searchQuery, year, lang, page, ITEMS_PER_PAGE);
+            setResults(data || []);
+            // Lấy total_count từ item đầu tiên (API trả về trong mỗi item)
+            if (data && data.length > 0 && data[0].total_count) {
+                setTotalCount(parseInt(data[0].total_count, 10));
+            } else {
+                setTotalCount(0);
+            }
+            if (onSearchComplete) {
+                onSearchComplete(data || []);
+            }
+        } catch (error) {
+            console.error("Lỗi tìm kiếm:", error);
+            setResults([]);
+            setTotalCount(0);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         console.log('Searching for:', query, 'Year:', year, 'Lang:', lang);
         e.preventDefault();
         if (!query.trim()) return;
 
-        setLoading(true);
-        try {
-            const results = await searchBearData(query, year, lang, 1, 10);
-            setResults(results || []); 
-            if (onSearchComplete) {
-                onSearchComplete(results || []);
-            }
-        } catch (error) {
-            console.error("Lỗi tìm kiếm:", error);
-            setResults([]);
-        } finally {
-            setLoading(false);
-        }
+        setCurrentPage(1);
+        await fetchResults(query, 1);
+    };
+
+    const handlePageChange = async (newPage: number) => {
+        if (newPage < 1 || newPage > totalPages || loading) return;
+        setCurrentPage(newPage);
+        await fetchResults(query, newPage);
+    };
+
+    const handleClear = () => {
+        setQuery('');
+        setResults([]);
+        setCurrentPage(1);
+        setTotalCount(0);
     };
 
     return (
@@ -59,7 +90,7 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
                         {query && (
                             <button 
                                 type="button" 
-                                onClick={() => { setQuery(''); setResults([]); }}
+                                onClick={handleClear}
                                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                             >
                                 <X className="w-4 h-4" />
@@ -105,6 +136,33 @@ export default function SearchBar({ year, onSelectLocation, onSearchComplete }: 
                         </div>
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {results.length > 0 && totalPages > 1 && (
+                    <div className="p-3 bg-white border-t border-gray-200 flex items-center justify-between">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || loading}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            {t.searchBar.prev}
+                        </button>
+                        
+                        <span className="text-sm text-gray-600">
+                            {t.searchBar.page} {currentPage} / {totalPages}
+                        </span>
+                        
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || loading}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {t.searchBar.next}
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

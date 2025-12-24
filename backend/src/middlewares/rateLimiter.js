@@ -8,7 +8,7 @@ const authLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 100,
+    max: 300,
     message: { 
         status: 429, 
         message: "Bạn thao tác quá nhanh, vui lòng thử lại sau 1 phút." 

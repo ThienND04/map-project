@@ -5,6 +5,13 @@ export interface BearSighting {
     year: number;
     name: string;
     description: string;
+    // Multi-language fields
+    name_vi?: string;
+    name_en?: string;
+    name_ja?: string;
+    description_vi?: string;
+    description_en?: string;
+    description_ja?: string;
 }
 
 export interface MapViewState {
